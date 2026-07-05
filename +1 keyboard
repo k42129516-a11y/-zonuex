@@ -1,0 +1,420 @@
+-- Roblox Script: Advanced GUI with Speed Hack, Jump Hack & Teleport
+-- Paste into a LocalScript inside StarterPlayerScripts or StarterGui
+
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
+local teleportService = game:GetService("TeleportService")
+
+-- ======================== CONFIG ========================
+local CONFIG = {
+    speedMultiplier = 1.5,
+    jumpMultiplier = 1.3,
+    defaultSpeed = 16,
+    defaultJump = 50
+}
+
+-- ======================== GUI CREATION ========================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ZonuexHub"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 450, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -225, 0.5, -250)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.BackgroundTransparency = 0.05
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Gradient for main frame
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+})
+gradient.Parent = mainFrame
+
+-- Corner rounding
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "@zonuex HUB"
+title.TextColor3 = Color3.fromRGB(0, 255, 200)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 25)
+subtitle.Position = UDim2.new(0, 0, 0, 50)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Speed • Jump • Teleport"
+subtitle.TextColor3 = Color3.fromRGB(150, 150, 200)
+subtitle.TextSize = 16
+subtitle.Font = Enum.Font.GothamSemibold
+subtitle.Parent = mainFrame
+
+-- ======================== SPEED SECTION ========================
+local speedSection = Instance.new("Frame")
+speedSection.Size = UDim2.new(1, -20, 0, 90)
+speedSection.Position = UDim2.new(0, 10, 0, 85)
+speedSection.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+speedSection.BackgroundTransparency = 0.5
+speedSection.BorderSizePixel = 0
+speedSection.Parent = mainFrame
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 8)
+speedCorner.Parent = speedSection
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.5, -10, 0, 30)
+speedLabel.Position = UDim2.new(0, 10, 0, 5)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Speed Hack"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextSize = 18
+speedLabel.Font = Enum.Font.GothamSemibold
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = speedSection
+
+local speedToggle = Instance.new("TextButton")
+speedToggle.Size = UDim2.new(0, 80, 0, 35)
+speedToggle.Position = UDim2.new(0.8, -90, 0, 5)
+speedToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+speedToggle.Text = "OFF"
+speedToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+speedToggle.TextSize = 16
+speedToggle.Font = Enum.Font.GothamBold
+speedToggle.Parent = speedSection
+
+local speedCorner2 = Instance.new("UICorner")
+speedCorner2.CornerRadius = UDim.new(0, 6)
+speedCorner2.Parent = speedToggle
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(0.5, -10, 0, 30)
+speedSlider.Position = UDim2.new(0, 10, 0, 45)
+speedSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+speedSlider.Text = "1.5x"
+speedSlider.TextColor3 = Color3.fromRGB(200, 200, 255)
+speedSlider.TextSize = 16
+speedSlider.Font = Enum.Font.GothamBold
+speedSlider.ClearTextOnFocus = false
+speedSlider.Parent = speedSection
+
+local speedSliderCorner = Instance.new("UICorner")
+speedSliderCorner.CornerRadius = UDim.new(0, 6)
+speedSliderCorner.Parent = speedSlider
+
+-- ======================== JUMP SECTION ========================
+local jumpSection = Instance.new("Frame")
+jumpSection.Size = UDim2.new(1, -20, 0, 90)
+jumpSection.Position = UDim2.new(0, 10, 0, 185)
+jumpSection.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+jumpSection.BackgroundTransparency = 0.5
+jumpSection.BorderSizePixel = 0
+jumpSection.Parent = mainFrame
+
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 8)
+jumpCorner.Parent = jumpSection
+
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(0.5, -10, 0, 30)
+jumpLabel.Position = UDim2.new(0, 10, 0, 5)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "Jump Hack"
+jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpLabel.TextSize = 18
+jumpLabel.Font = Enum.Font.GothamSemibold
+jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+jumpLabel.Parent = jumpSection
+
+local jumpToggle = Instance.new("TextButton")
+jumpToggle.Size = UDim2.new(0, 80, 0, 35)
+jumpToggle.Position = UDim2.new(0.8, -90, 0, 5)
+jumpToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+jumpToggle.Text = "OFF"
+jumpToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+jumpToggle.TextSize = 16
+jumpToggle.Font = Enum.Font.GothamBold
+jumpToggle.Parent = jumpSection
+
+local jumpCorner2 = Instance.new("UICorner")
+jumpCorner2.CornerRadius = UDim.new(0, 6)
+jumpCorner2.Parent = jumpToggle
+
+local jumpSlider = Instance.new("TextBox")
+jumpSlider.Size = UDim2.new(0.5, -10, 0, 30)
+jumpSlider.Position = UDim2.new(0, 10, 0, 45)
+jumpSlider.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+jumpSlider.Text = "1.3x"
+jumpSlider.TextColor3 = Color3.fromRGB(200, 200, 255)
+jumpSlider.TextSize = 16
+jumpSlider.Font = Enum.Font.GothamBold
+jumpSlider.ClearTextOnFocus = false
+jumpSlider.Parent = jumpSection
+
+local jumpSliderCorner = Instance.new("UICorner")
+jumpSliderCorner.CornerRadius = UDim.new(0, 6)
+jumpSliderCorner.Parent = jumpSlider
+
+-- ======================== TELEPORT SECTION ========================
+local teleportSection = Instance.new("Frame")
+teleportSection.Size = UDim2.new(1, -20, 0, 160)
+teleportSection.Position = UDim2.new(0, 10, 0, 285)
+teleportSection.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+teleportSection.BackgroundTransparency = 0.5
+teleportSection.BorderSizePixel = 0
+teleportSection.Parent = mainFrame
+
+local teleportCorner = Instance.new("UICorner")
+teleportCorner.CornerRadius = UDim.new(0, 8)
+teleportCorner.Parent = teleportSection
+
+local teleportLabel = Instance.new("TextLabel")
+teleportLabel.Size = UDim2.new(1, -20, 0, 25)
+teleportLabel.Position = UDim2.new(0, 10, 0, 5)
+teleportLabel.BackgroundTransparency = 1
+teleportLabel.Text = "Teleport to Location"
+teleportLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleportLabel.TextSize = 18
+teleportLabel.Font = Enum.Font.GothamSemibold
+teleportLabel.TextXAlignment = Enum.TextXAlignment.Left
+teleportLabel.Parent = teleportSection
+
+-- Location buttons grid
+local locations = {
+    "Spawn", "Shop", "Arena", "Park", "Beach",
+    "Castle", "Forest", "Desert", "Mountain", "City",
+    "Port", "Temple", "Cave", "Volcano"
+}
+
+local function createLocationButton(parent, name, index)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 65, 0, 28)
+    local row = math.floor((index - 1) / 7)
+    local col = (index - 1) % 7
+    btn.Position = UDim2.new(0, 5 + col * 65, 0, 35 + row * 35)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 255)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 4)
+    btnCorner.Parent = btn
+    
+    return btn
+end
+
+local locationButtons = {}
+for i, name in ipairs(locations) do
+    locationButtons[i] = createLocationButton(teleportSection, name, i)
+end
+
+-- ======================== FUNCTIONS ========================
+local humanoid = nil
+local character = nil
+
+local function getHumanoid()
+    local char = player.Character
+    if char then
+        return char:FindFirstChild("Humanoid")
+    end
+    return nil
+end
+
+local speedEnabled = false
+local jumpEnabled = false
+
+-- Speed toggle
+speedToggle.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        speedToggle.Text = "ON"
+        speedToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        speedToggle.TextColor3 = Color3.fromRGB(0, 255, 150)
+    else
+        speedToggle.Text = "OFF"
+        speedToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+        speedToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Speed multiplier
+speedSlider.FocusLost:Connect(function()
+    local val = tonumber(speedSlider.Text)
+    if val and val > 0 then
+        CONFIG.speedMultiplier = val
+        speedSlider.Text = val .. "x"
+    else
+        speedSlider.Text = CONFIG.speedMultiplier .. "x"
+    end
+end)
+
+-- Jump toggle
+jumpToggle.MouseButton1Click:Connect(function()
+    jumpEnabled = not jumpEnabled
+    if jumpEnabled then
+        jumpToggle.Text = "ON"
+        jumpToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        jumpToggle.TextColor3 = Color3.fromRGB(0, 255, 150)
+    else
+        jumpToggle.Text = "OFF"
+        jumpToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+        jumpToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Jump multiplier
+jumpSlider.FocusLost:Connect(function()
+    local val = tonumber(jumpSlider.Text)
+    if val and val > 0 then
+        CONFIG.jumpMultiplier = val
+        jumpSlider.Text = val .. "x"
+    else
+        jumpSlider.Text = CONFIG.jumpMultiplier .. "x"
+    end
+end)
+
+-- Teleport function
+local teleportLocations = {
+    Vector3.new(0, 5, 0),
+    Vector3.new(50, 5, 0),
+    Vector3.new(100, 5, 0),
+    Vector3.new(-50, 5, 50),
+    Vector3.new(0, 5, -50),
+    Vector3.new(-100, 5, -100),
+    Vector3.new(80, 5, 80),
+    Vector3.new(-80, 5, -80),
+    Vector3.new(120, 5, -120),
+    Vector3.new(0, 5, 120),
+    Vector3.new(60, 5, -60),
+    Vector3.new(-60, 5, 60),
+    Vector3.new(150, 5, 150),
+    Vector3.new(-150, 5, -150)
+}
+
+for i, btn in ipairs(locationButtons) do
+    btn.MouseButton1Click:Connect(function()
+        local char = player.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = teleportLocations[i] or Vector3.new(0, 10, 0)
+                hrp.CFrame = CFrame.new(pos)
+            end
+        end
+    end)
+end
+
+-- ======================== MAIN LOOP ========================
+runService.Heartbeat:Connect(function()
+    local h = getHumanoid()
+    if h then
+        if speedEnabled then
+            local baseSpeed = CONFIG.defaultSpeed
+            h.WalkSpeed = baseSpeed * CONFIG.speedMultiplier
+        else
+            if h.WalkSpeed ~= CONFIG.defaultSpeed then
+                h.WalkSpeed = CONFIG.defaultSpeed
+            end
+        end
+        
+        if jumpEnabled then
+            h.JumpPower = CONFIG.defaultJump * CONFIG.jumpMultiplier
+        else
+            if h.JumpPower ~= CONFIG.defaultJump then
+                h.JumpPower = CONFIG.defaultJump
+            end
+        end
+    end
+end)
+
+-- Respawn handler
+player.CharacterAdded:Connect(function()
+    wait(0.5)
+    local h = getHumanoid()
+    if h then
+        CONFIG.defaultSpeed = h.WalkSpeed or 16
+        CONFIG.defaultJump = h.JumpPower or 50
+    end
+end)
+
+-- ======================== DRAG FUNCTION ========================
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ======================== CLOSE BUTTON ========================
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -40, 0, 10)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+closeBtn.TextSize = 20
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = mainFrame
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+-- Toggle GUI with Insert key
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+print("[+] @zonuex Hub loaded! Press Insert to toggle GUI")
