@@ -1,0 +1,477 @@
+-- Roblox Script: Advanced Zonuex Hub (Speed, Jump, Teleport)
+-- Paste into a LocalScript inside StarterPlayerScripts or StarterGui
+-- Press Insert to toggle GUI | Click '-' to minimize
+
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
+local teleportService = game:GetService("TeleportService")
+
+-- ======================== CONFIG ========================
+local CONFIG = {
+    defaultSpeed = 16,
+    defaultJump = 50,
+    speedMultiplier = 1.5,
+    jumpMultiplier = 1.3
+}
+
+-- ======================== VARIABLES ========================
+local speedEnabled = false
+local jumpEnabled = false
+local guiVisible = true
+local minimized = false
+
+-- ======================== GUI CREATION ========================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ZonuexHub"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 480, 0, 520)
+mainFrame.Position = UDim2.new(0.5, -240, 0.5, -260)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+mainFrame.BackgroundTransparency = 0.05
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+mainFrame.ClipsDescendants = true
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 18))
+})
+gradient.Parent = mainFrame
+
+-- ======================== TITLE BAR (Draggable + Minimize) ========================
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 45)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundTransparency = 1
+titleBar.Parent = mainFrame
+
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(0.8, -50, 1, 0)
+titleText.Position = UDim2.new(0, 15, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "⚡ ZONUEX HUB"
+titleText.TextColor3 = Color3.fromRGB(0, 255, 200)
+titleText.TextSize = 22
+titleText.Font = Enum.Font.GothamBold
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = titleBar
+
+-- Minimize Button (-)
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 35, 0, 35)
+minBtn.Position = UDim2.new(1, -80, 0, 5)
+minBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 65)
+minBtn.Text = "−"
+minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minBtn.TextSize = 24
+minBtn.Font = Enum.Font.GothamBold
+minBtn.Parent = titleBar
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minBtn
+
+-- Close Button (X)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 65)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+closeBtn.TextSize = 20
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeBtn
+
+-- ======================== CONTENT FRAME (for minimization) ========================
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, 0, 1, -45)
+contentFrame.Position = UDim2.new(0, 0, 0, 45)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- ======================== SPEED SECTION ========================
+local speedSection = Instance.new("Frame")
+speedSection.Size = UDim2.new(1, -20, 0, 85)
+speedSection.Position = UDim2.new(0, 10, 0, 10)
+speedSection.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
+speedSection.BackgroundTransparency = 0.6
+speedSection.BorderSizePixel = 0
+speedSection.Parent = contentFrame
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 8)
+speedCorner.Parent = speedSection
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.5, -10, 0, 30)
+speedLabel.Position = UDim2.new(0, 10, 0, 5)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "🏃 Speed Hack"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextSize = 18
+speedLabel.Font = Enum.Font.GothamSemibold
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = speedSection
+
+local speedToggle = Instance.new("TextButton")
+speedToggle.Size = UDim2.new(0, 80, 0, 32)
+speedToggle.Position = UDim2.new(0.8, -90, 0, 4)
+speedToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+speedToggle.Text = "OFF"
+speedToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+speedToggle.TextSize = 16
+speedToggle.Font = Enum.Font.GothamBold
+speedToggle.Parent = speedSection
+
+local speedToggleCorner = Instance.new("UICorner")
+speedToggleCorner.CornerRadius = UDim.new(0, 6)
+speedToggleCorner.Parent = speedToggle
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(0.5, -10, 0, 28)
+speedSlider.Position = UDim2.new(0, 10, 0, 45)
+speedSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+speedSlider.Text = "1.5x"
+speedSlider.TextColor3 = Color3.fromRGB(200, 200, 255)
+speedSlider.TextSize = 15
+speedSlider.Font = Enum.Font.GothamBold
+speedSlider.ClearTextOnFocus = false
+speedSlider.Parent = speedSection
+
+local speedSliderCorner = Instance.new("UICorner")
+speedSliderCorner.CornerRadius = UDim.new(0, 6)
+speedSliderCorner.Parent = speedSlider
+
+-- ======================== JUMP SECTION ========================
+local jumpSection = Instance.new("Frame")
+jumpSection.Size = UDim2.new(1, -20, 0, 85)
+jumpSection.Position = UDim2.new(0, 10, 0, 105)
+jumpSection.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
+jumpSection.BackgroundTransparency = 0.6
+jumpSection.BorderSizePixel = 0
+jumpSection.Parent = contentFrame
+
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 8)
+jumpCorner.Parent = jumpSection
+
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(0.5, -10, 0, 30)
+jumpLabel.Position = UDim2.new(0, 10, 0, 5)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "⬆ Jump Hack"
+jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpLabel.TextSize = 18
+jumpLabel.Font = Enum.Font.GothamSemibold
+jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+jumpLabel.Parent = jumpSection
+
+local jumpToggle = Instance.new("TextButton")
+jumpToggle.Size = UDim2.new(0, 80, 0, 32)
+jumpToggle.Position = UDim2.new(0.8, -90, 0, 4)
+jumpToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+jumpToggle.Text = "OFF"
+jumpToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+jumpToggle.TextSize = 16
+jumpToggle.Font = Enum.Font.GothamBold
+jumpToggle.Parent = jumpSection
+
+local jumpToggleCorner = Instance.new("UICorner")
+jumpToggleCorner.CornerRadius = UDim.new(0, 6)
+jumpToggleCorner.Parent = jumpToggle
+
+local jumpSlider = Instance.new("TextBox")
+jumpSlider.Size = UDim2.new(0.5, -10, 0, 28)
+jumpSlider.Position = UDim2.new(0, 10, 0, 45)
+jumpSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+jumpSlider.Text = "1.3x"
+jumpSlider.TextColor3 = Color3.fromRGB(200, 200, 255)
+jumpSlider.TextSize = 15
+jumpSlider.Font = Enum.Font.GothamBold
+jumpSlider.ClearTextOnFocus = false
+jumpSlider.Parent = jumpSection
+
+local jumpSliderCorner = Instance.new("UICorner")
+jumpSliderCorner.CornerRadius = UDim.new(0, 6)
+jumpSliderCorner.Parent = jumpSlider
+
+-- ======================== TELEPORT SECTION ========================
+local teleportSection = Instance.new("Frame")
+teleportSection.Size = UDim2.new(1, -20, 0, 230)
+teleportSection.Position = UDim2.new(0, 10, 0, 200)
+teleportSection.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
+teleportSection.BackgroundTransparency = 0.6
+teleportSection.BorderSizePixel = 0
+teleportSection.Parent = contentFrame
+
+local teleportCorner = Instance.new("UICorner")
+teleportCorner.CornerRadius = UDim.new(0, 8)
+teleportCorner.Parent = teleportSection
+
+local teleportLabel = Instance.new("TextLabel")
+teleportLabel.Size = UDim2.new(1, -20, 0, 25)
+teleportLabel.Position = UDim2.new(0, 10, 0, 5)
+teleportLabel.BackgroundTransparency = 1
+teleportLabel.Text = "📍 Teleport Locations"
+teleportLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleportLabel.TextSize = 18
+teleportLabel.Font = Enum.Font.GothamSemibold
+teleportLabel.TextXAlignment = Enum.TextXAlignment.Left
+teleportLabel.Parent = teleportSection
+
+-- ======================== LOCATION DATA ========================
+local locations = {
+    {name = "🏠 Spawn", pos = Vector3.new(0, 5, 0)},
+    {name = "🛒 Shop", pos = Vector3.new(50, 5, 0)},
+    {name = "⚔️ Arena", pos = Vector3.new(100, 5, 0)},
+    {name = "🌳 Park", pos = Vector3.new(-50, 5, 50)},
+    {name = "🏖️ Beach", pos = Vector3.new(0, 5, -50)},
+    {name = "🏰 Castle", pos = Vector3.new(-100, 5, -100)},
+    {name = "🌲 Forest", pos = Vector3.new(80, 5, 80)},
+    {name = "🏜️ Desert", pos = Vector3.new(-80, 5, -80)},
+    {name = "⛰️ Mountain", pos = Vector3.new(120, 5, -120)},
+    {name = "🏙️ City", pos = Vector3.new(0, 5, 120)},
+    {name = "⛵ Port", pos = Vector3.new(60, 5, -60)},
+    {name = "🏛️ Temple", pos = Vector3.new(-60, 5, 60)},
+    {name = "🕳️ Cave", pos = Vector3.new(150, 5, 150)},
+    {name = "🌋 Volcano", pos = Vector3.new(-150, 5, -150)}
+}
+
+local function createLocationButton(parent, data, index)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 105, 0, 30)
+    local row = math.floor((index - 1) / 4)
+    local col = (index - 1) % 4
+    btn.Position = UDim2.new(0, 5 + col * 110, 0, 35 + row * 35)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 75)
+    btn.Text = data.name
+    btn.TextColor3 = Color3.fromRGB(220, 220, 255)
+    btn.TextSize = 12
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 5)
+    btnCorner.Parent = btn
+    
+    -- Hover effect
+    btn.MouseEnter:Connect(function()
+        tweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(65, 65, 100)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        tweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(45, 45, 75)}):Play()
+    end)
+    
+    -- Teleport on click
+    btn.MouseButton1Click:Connect(function()
+        local char = player.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Smooth teleport with tween
+                local targetCFrame = CFrame.new(data.pos)
+                tweenService:Create(hrp, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {CFrame = targetCFrame}):Play()
+                -- Visual feedback
+                btn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+                task.wait(0.15)
+                btn.BackgroundColor3 = Color3.fromRGB(45, 45, 75)
+            end
+        end
+    end)
+    
+    return btn
+end
+
+local locationButtons = {}
+for i, data in ipairs(locations) do
+    locationButtons[i] = createLocationButton(teleportSection, data, i)
+end
+
+-- ======================== FUNCTIONS ========================
+local function getHumanoid()
+    local char = player.Character
+    if char then
+        return char:FindFirstChild("Humanoid")
+    end
+    return nil
+end
+
+-- Speed toggle
+speedToggle.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        speedToggle.Text = "ON"
+        speedToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+        speedToggle.TextColor3 = Color3.fromRGB(0, 255, 150)
+    else
+        speedToggle.Text = "OFF"
+        speedToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+        speedToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+speedSlider.FocusLost:Connect(function()
+    local val = tonumber(speedSlider.Text)
+    if val and val > 0.1 and val < 10 then
+        CONFIG.speedMultiplier = val
+        speedSlider.Text = string.format("%.1fx", val)
+    else
+        speedSlider.Text = string.format("%.1fx", CONFIG.speedMultiplier)
+    end
+end)
+
+-- Jump toggle
+jumpToggle.MouseButton1Click:Connect(function()
+    jumpEnabled = not jumpEnabled
+    if jumpEnabled then
+        jumpToggle.Text = "ON"
+        jumpToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+        jumpToggle.TextColor3 = Color3.fromRGB(0, 255, 150)
+    else
+        jumpToggle.Text = "OFF"
+        jumpToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+        jumpToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+jumpSlider.FocusLost:Connect(function()
+    local val = tonumber(jumpSlider.Text)
+    if val and val > 0.1 and val < 10 then
+        CONFIG.jumpMultiplier = val
+        jumpSlider.Text = string.format("%.1fx", val)
+    else
+        jumpSlider.Text = string.format("%.1fx", CONFIG.jumpMultiplier)
+    end
+end)
+
+-- ======================== MINIMIZE / RESTORE ========================
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        mainFrame:TweenSize(UDim2.new(0, 480, 0, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+        contentFrame.Visible = false
+        minBtn.Text = "+"
+        titleText.Text = "⚡ ZONUEX HUB [MIN]"
+    else
+        mainFrame:TweenSize(UDim2.new(0, 480, 0, 520), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+        contentFrame.Visible = true
+        minBtn.Text = "−"
+        titleText.Text = "⚡ ZONUEX HUB"
+    end
+end)
+
+-- Close (hide)
+closeBtn.MouseButton1Click:Connect(function()
+    guiVisible = not guiVisible
+    mainFrame.Visible = guiVisible
+end)
+
+-- ======================== DRAG FUNCTION ========================
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ======================== TOGGLE WITH INSERT ========================
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        guiVisible = not guiVisible
+        mainFrame.Visible = guiVisible
+    end
+end)
+
+-- ======================== MAIN LOOP (SPEED + JUMP) ========================
+runService.Heartbeat:Connect(function()
+    local h = getHumanoid()
+    if h then
+        -- Speed
+        if speedEnabled then
+            local base = CONFIG.defaultSpeed
+            h.WalkSpeed = base * CONFIG.speedMultiplier
+        else
+            if h.WalkSpeed ~= CONFIG.defaultSpeed and h.WalkSpeed ~= 0 then
+                h.WalkSpeed = CONFIG.defaultSpeed
+            end
+        end
+        
+        -- Jump
+        if jumpEnabled then
+            h.JumpPower = CONFIG.defaultJump * CONFIG.jumpMultiplier
+        else
+            if h.JumpPower ~= CONFIG.defaultJump then
+                h.JumpPower = CONFIG.defaultJump
+            end
+        end
+    end
+end)
+
+-- ======================== RESPAWN HANDLER ========================
+player.CharacterAdded:Connect(function(newChar)
+    wait(0.5)
+    local h = newChar:FindFirstChild("Humanoid")
+    if h then
+        CONFIG.defaultSpeed = h.WalkSpeed or 16
+        CONFIG.defaultJump = h.JumpPower or 50
+    end
+end)
+
+-- ======================== INIT ========================
+wait(1)
+local h = getHumanoid()
+if h then
+    CONFIG.defaultSpeed = h.WalkSpeed or 16
+    CONFIG.defaultJump = h.JumpPower or 50
+end
+
+print("[+] @zonuex Hub loaded!")
+print("[+] Press Insert to toggle GUI")
+print("[+] Click '−' to minimize")
